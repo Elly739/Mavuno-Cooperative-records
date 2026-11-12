@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -92,6 +92,7 @@ function App() {
   const [notice, setNotice] = useState(initialState.notice)
   const [query, setQuery] = useState('')
   const [isOnline, setIsOnline] = useState(navigator.onLine)
+  const returnFocusRef = useRef<HTMLElement | null>(null)
   const totals = ledgerTotals(data.ledger)
   const stockValue = totalStock(data.inventory)
   const heading = sectionTitles[section]
@@ -105,6 +106,12 @@ function App() {
       window.removeEventListener('offline', updateConnection)
     }
   }, [])
+
+  useEffect(() => {
+    if (modal !== null) return
+    returnFocusRef.current?.focus()
+    returnFocusRef.current = null
+  }, [modal])
 
   function commit(nextData: CooperativeData, successMessage: string): boolean {
     try {
@@ -170,6 +177,7 @@ function App() {
   }
 
   function openModal(mode: ModalMode) {
+    returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     setNotice('')
     setModalError('')
     setModal(mode)
@@ -179,7 +187,7 @@ function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <a className="brand" href="#" onClick={(event) => { event.preventDefault(); setSection('overview') }}>
-          <img className="brand-mark" src="/mavuno.svg" alt="" />
+          <img className="brand-mark" src="/mavuno-icon.jpg" alt="" />
           <span className="brand-copy"><strong>Mavuno <span>Co-op</span></strong><small>NAKURU COUNTY</small></span>
         </a>
         <div className="sidebar-label">YOUR WORKSPACE</div>
@@ -207,7 +215,7 @@ function App() {
 
       <div className="workspace">
         <header className="topbar">
-          <div className="mobile-brand"><img className="brand-mark" src="/mavuno.svg" alt="" /><strong>Mavuno Co-op</strong></div>
+          <div className="mobile-brand"><img className="brand-mark" src="/mavuno-icon.jpg" alt="" /><strong>Mavuno Co-op</strong></div>
           <div className="topbar-status">
             <span className="local-records"><span className="status-dot" /> On-device records</span>
             <span className={`connection ${isOnline ? 'connected' : 'offline'}`}>
@@ -295,7 +303,7 @@ function Overview({
           <p>Keep farmer deliveries, crop stores, and cooperative finances in one simple place.</p>
           <button className="welcome-button" disabled={!canWrite} onClick={() => openModal('sale')}><Plus size={17} /> Record farmer intake</button>
         </div>
-        <img className="welcome-art" src="/images/nakuru-harvest.svg" alt="" />
+        <img className="welcome-art" src="/images/hero-harvest.jpg" alt="" />
       </section>
 
       <section className="metric-grid" aria-label="Cooperative totals">
@@ -489,8 +497,8 @@ function SearchField({ value, onChange, placeholder }: { value: string; onChange
 
 function CropImage({ crop }: { crop: string }) {
   const normalized = crop.toLowerCase()
-  const image = normalized.includes('bean') ? 'beans' : normalized.includes('sorghum') ? 'sorghum' : 'maize'
-  return <img className={`crop-image crop-image-${image}`} src={`/images/${image}.svg`} alt="" loading="lazy" />
+  const image = normalized.includes('bean') ? 'beans-harvest' : normalized.includes('sorghum') ? 'sorghum-field' : 'maize-farmer'
+  return <img className={`crop-image crop-image-${image}`} src={`/images/${image}.jpg`} alt="" loading="lazy" />
 }
 
 function EmptyState({ icon: Icon, title, description }: { icon: LucideIcon; title: string; description: string }) {
@@ -510,10 +518,20 @@ function RecordModal({ mode, error, onClose, onSubmit }: {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
 }) {
   const titles: Record<ModalMode, string> = { sale: 'Receive farmer produce', stock: 'Adjust inventory', ledger: 'Add cash book entry' }
+
+  useEffect(() => {
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose()
+    }
+
+    document.addEventListener('keydown', closeOnEscape)
+    return () => document.removeEventListener('keydown', closeOnEscape)
+  }, [onClose])
+
   return (
     <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <div className="modal-heading"><div><p className="eyebrow">COOPERATIVE RECORDS</p><h2 id="modal-title">{titles[mode]}</h2></div><button className="icon-button" onClick={onClose} aria-label="Close dialog"><X size={20} /></button></div>
+        <div className="modal-heading"><div><p className="eyebrow">COOPERATIVE RECORDS</p><h2 id="modal-title">{titles[mode]}</h2></div><button type="button" className="icon-button" onClick={onClose} aria-label="Close dialog"><X size={20} /></button></div>
         <form onSubmit={onSubmit}>
           {error && <p className="modal-error" role="alert">{error}</p>}
           {mode === 'sale' && <>

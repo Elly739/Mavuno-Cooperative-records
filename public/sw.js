@@ -1,12 +1,12 @@
-const CACHE_NAME = 'mavuno-shell-v2'
+const CACHE_NAME = 'mavuno-shell-v3'
 const APP_SHELL = [
   '/',
   '/manifest.webmanifest',
-  '/mavuno.svg',
-  '/images/nakuru-harvest.svg',
-  '/images/maize.svg',
-  '/images/beans.svg',
-  '/images/sorghum.svg',
+  '/mavuno-icon.jpg',
+  '/images/hero-harvest.jpg',
+  '/images/maize-farmer.jpg',
+  '/images/beans-harvest.jpg',
+  '/images/sorghum-field.jpg',
 ]
 
 self.addEventListener('install', (event) => {

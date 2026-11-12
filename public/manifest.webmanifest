@@ -4,13 +4,13 @@
   "description": "Offline-ready crop sales, stock, and cash records.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f4f6f2",
-  "theme_color": "#145a37",
+  "background_color": "#f6f7f2",
+  "theme_color": "#1b603d",
   "icons": [
     {
-      "src": "/mavuno.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/mavuno-icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     }
   ]

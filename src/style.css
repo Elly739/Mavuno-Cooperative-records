@@ -1,16 +1,16 @@
 :root {
   font-family: Inter, "Segoe UI", Arial, sans-serif;
   color: #23332b;
-  background: #f4f6f2;
+  background: #f6f7f2;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   font-optical-sizing: auto;
   font-weight: 400;
-  --forest: #145a37;
-  --forest-deep: #103f2b;
-  --forest-light: #26734a;
-  --muted: #78847b;
-  --line: #e7ebe5;
+  --forest: #1b603d;
+  --forest-deep: #123f2c;
+  --forest-light: #2e7650;
+  --muted: #68796d;
+  --line: #e3e9e0;
   --panel: #fff;
   --ink: #203328;
   --lime: #dcedb4;
@@ -264,4 +264,139 @@ tbody tr:hover { background: #fbfcf9; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
+
+.brand-mark { border: 1px solid #e8ede5; border-radius: 12px; box-shadow: 0 2px 6px rgb(22 54 34 / 10%); }
+.brand-copy strong { font-size: 16px; }
+.brand-copy small, .sidebar-label, .eyebrow { font-size: 10px; }
+.nav-item { font-size: 13px; min-height: 46px; }
+.topbar { height: 66px; }
+.local-records, .connection { font-size: 12px; }
+.main-content { padding-top: 32px; }
+.page-heading h1 { font-size: 29px; }
+.page-description { color: #69786d; font-size: 13px; }
+.primary-button, .secondary-button, .welcome-button { font-size: 13px; min-height: 42px; padding-left: 15px; padding-right: 15px; }
+.notice { font-size: 13px; padding: 11px 14px; }
+.welcome-card { min-height: 232px; }
+.welcome-copy { padding: 30px 32px; }
+.welcome-tag { font-size: 10px; }
+.welcome-copy h2 { font-size: 32px; }
+.welcome-copy p { font-size: 13px; max-width: 390px; }
+.welcome-art { object-position: center 56%; }
+.metric-grid { gap: 14px; margin: 16px 0; }
+.metric-card { border-radius: 11px; padding: 17px 18px 15px; }
+.metric-icon { height: 36px; width: 36px; }
+.metric-label { font-size: 12px; }
+.metric-value { font-size: clamp(19px, 1.65vw, 24px); }
+.metric-detail { color: #718075; font-size: 11px; }
+.quick-actions { padding: 18px 20px; }
+.panel-heading h2 { font-size: 15px; }
+.panel-heading p { color: #718075; font-size: 12px; }
+.quick-action-grid { gap: 12px; }
+.quick-action { min-height: 62px; padding: 9px 12px; }
+.quick-action-icon { flex-basis: 36px; height: 36px; width: 36px; }
+.quick-action > span strong { font-size: 12px; }
+.quick-action > span small { color: #718075; font-size: 11px; }
+.overview-lower { gap: 16px; }
+.recent-panel, .locations-panel, .data-panel { padding: 19px 20px; }
+.text-button { font-size: 11px; }
+.location-row { min-height: 49px; }
+.location-mark { height: 34px; width: 34px; }
+.location-name, .location-total { font-size: 12px; }
+.location-row > strong, .location-total strong { font-size: 13px; }
+.location-row > strong small { font-size: 10px; }
+.empty-state strong { font-size: 13px; }
+.empty-state p { color: #718075; font-size: 12px; }
+.table-total small { color: #718075; font-size: 10px; }
+.table-total strong { font-size: 15px; }
+.table-search { margin-bottom: 12px; padding: 0 11px; }
+.table-search input { font-size: 13px; height: 42px; }
+table { min-width: 700px; }
+th { font-size: 10px; padding: 12px 10px; }
+td { font-size: 12px; padding: 11px 10px; }
+.farmer-cell strong, .crop-name strong { font-size: 12px; }
+.avatar { font-size: 10px; height: 30px; width: 30px; }
+.crop-image { border-radius: 8px; height: 38px; width: 38px; }
+.crop-image-beans-harvest { object-position: center; }
+.crop-image-sorghum-field { object-position: center 60%; }
+.crop-image-maize-farmer { object-position: center 67%; }
+.crop-pill, .type-pill { font-size: 10px; }
+.description-cell { font-size: 12px; }
+.table-hint { color: #718075; font-size: 11px; }
+.ledger-summary { gap: 14px; margin-bottom: 16px; }
+.ledger-summary div { padding: 16px 18px; }
+.ledger-summary span { font-size: 12px; }
+.ledger-summary strong { font-size: 20px; }
+.page-footer { color: #718075; font-size: 10px; margin-top: 20px; }
+.modal { border-radius: 16px; max-width: 520px; padding: 26px; }
+.modal-heading { margin-bottom: 21px; }
+.modal-heading h2 { font-size: 21px; }
+.icon-button { height: 40px; width: 40px; }
+.modal form { gap: 15px; }
+.modal label { font-size: 12px; gap: 7px; }
+.modal input, .modal select { border-radius: 8px; font-size: 14px; height: 44px; padding: 0 12px; }
+.form-grid { gap: 13px; }
+.form-note { font-size: 12px; padding: 10px 12px; }
+.modal-error { font-size: 12px; }
+
+@media (max-width: 1100px) {
+  .metric-value { font-size: clamp(19px, 2.4vw, 23px); }
+}
+
+@media (max-width: 760px) {
+  .sidebar { height: calc(72px + env(safe-area-inset-bottom)); padding: 6px 7px calc(6px + env(safe-area-inset-bottom)); }
+  .nav-item { font-size: 11px; gap: 4px; min-height: 52px; }
+  .nav-item svg { height: 19px; width: 19px; }
+  .workspace { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+  .topbar { height: 58px; padding: 0 15px; }
+  .mobile-brand { font-size: 13px; }
+  .mobile-brand .brand-mark { height: 34px; width: 34px; }
+  .topbar-status { gap: 7px; }
+  .local-records, .connection { font-size: 10px; }
+  .connection { padding: 6px 8px; }
+  .main-content { padding: 23px 15px 20px; }
+  .eyebrow { font-size: 9px; }
+  .page-heading h1 { font-size: 25px; }
+  .page-description { font-size: 12px; }
+  .heading-actions .primary-button { font-size: 11px; min-height: 40px; padding: 0 11px; }
+  .welcome-card { min-height: 212px; }
+  .welcome-copy { max-width: 86%; padding: 23px 19px; }
+  .welcome-tag { font-size: 9px; }
+  .welcome-copy h2 { font-size: 27px; }
+  .welcome-copy p { font-size: 12px; max-width: 300px; }
+  .welcome-art { width: 72%; }
+  .welcome-card::after { width: 86%; }
+  .metric-grid { gap: 9px; margin: 11px 0; }
+  .metric-card { padding: 13px; }
+  .metric-label { font-size: 11px; }
+  .metric-value { font-size: clamp(17px, 4vw, 21px); }
+  .metric-detail { font-size: 10px; }
+  .quick-actions { padding: 15px; }
+  .panel-heading h2 { font-size: 14px; }
+  .panel-heading p { font-size: 11px; }
+  .quick-action-grid { gap: 8px; }
+  .quick-action { min-height: 56px; }
+  .quick-action > span strong { font-size: 12px; }
+  .quick-action > span small { font-size: 10px; }
+  .overview-lower { gap: 11px; }
+  .recent-panel, .locations-panel, .data-panel { padding: 15px 13px; }
+  .ledger-summary { gap: 7px; }
+  .ledger-summary div { gap: 7px; padding: 12px 9px; }
+  .ledger-summary span { font-size: 10px; }
+  .ledger-summary strong { font-size: clamp(13px, 3.8vw, 17px); }
+}
+
+@media (max-width: 440px) {
+  .local-records { display: none; }
+  .page-heading h1 { font-size: 24px; }
+  .welcome-card { min-height: 205px; }
+  .welcome-copy { max-width: 96%; padding: 20px 16px; }
+  .welcome-copy h2 { font-size: 25px; }
+  .welcome-copy p { font-size: 11px; max-width: 260px; }
+  .welcome-art { opacity: .7; width: 78%; }
+  .welcome-card::after { width: 100%; }
+  .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .metric-detail { line-height: 1.4; white-space: normal; }
+  .quick-action-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
 }
