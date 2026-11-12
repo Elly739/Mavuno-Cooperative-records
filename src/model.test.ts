@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { ledgerTotals, totalSales, totalStock, updateStock, type InventoryItem } from './model'
+import {
+  emptyData,
+  ledgerTotals,
+  recordFarmerIntake,
+  totalSales,
+  totalStock,
+  updateStock,
+  type InventoryItem,
+} from './model'
 
 describe('cooperative record calculations', () => {
   it('totals sales, stock, and ledger entries by type', () => {
@@ -31,5 +39,31 @@ describe('cooperative record calculations', () => {
 
     expect(() => updateStock(current, 'Maize', 'Main store', -21))
       .toThrow('You cannot dispatch more stock than is recorded.')
+  })
+
+  it('records farmer intake as received stock and a cash-book expense', () => {
+    const data = recordFarmerIntake(emptyData, {
+      farmer: '  Wanjiku Njoroge ',
+      crop: ' Maize ',
+      location: ' Main store ',
+      quantityKg: 20,
+      pricePerKg: 45,
+      soldAt: '2026-01-03',
+    })
+
+    expect(data.sales[0]).toMatchObject({
+      farmer: 'Wanjiku Njoroge',
+      crop: 'Maize',
+      location: 'Main store',
+      quantityKg: 20,
+      pricePerKg: 45,
+    })
+    expect(data.inventory[0]).toMatchObject({ crop: 'Maize', location: 'Main store', quantityKg: 20 })
+    expect(data.ledger[0]).toMatchObject({
+      type: 'expense',
+      description: 'Farmer intake · Maize · Wanjiku Njoroge',
+      amount: 900,
+    })
+    expect(ledgerTotals(data.ledger)).toEqual({ income: 0, expense: 900 })
   })
 })

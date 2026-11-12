@@ -16,6 +16,7 @@ function isSale(value: unknown): boolean {
     && typeof value.pricePerKg === 'number'
     && Number.isFinite(value.pricePerKg)
     && typeof value.soldAt === 'string'
+    && (value.location === undefined || typeof value.location === 'string')
 }
 
 function isInventoryItem(value: unknown): boolean {

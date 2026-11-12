@@ -6,10 +6,10 @@ import {
   CircleDollarSign,
   ClipboardList,
   LayoutDashboard,
-  Leaf,
+  MapPin,
   Plus,
   ReceiptText,
-  Sprout,
+  Search,
   Wifi,
   WifiOff,
   X,
@@ -21,6 +21,7 @@ import {
   formatQuantity,
   ledgerTotals,
   localDate,
+  recordFarmerIntake,
   totalSales,
   totalStock,
   updateStock,
@@ -33,14 +34,14 @@ type ModalMode = 'sale' | 'stock' | 'ledger'
 
 const navigation: { id: Section; label: string; icon: LucideIcon }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-  { id: 'sales', label: 'Crop sales', icon: ClipboardList },
+  { id: 'sales', label: 'Farmer intake', icon: ClipboardList },
   { id: 'inventory', label: 'Inventory', icon: Boxes },
   { id: 'ledger', label: 'Cash book', icon: ReceiptText },
 ]
 
 const sectionTitles: Record<Section, { title: string; description: string }> = {
   overview: { title: 'Overview', description: 'A clear view of your cooperative today.' },
-  sales: { title: 'Crop sales', description: 'Keep a record of every farmer delivery and sale.' },
+  sales: { title: 'Farmer intake', description: 'Record produce received from cooperative members.' },
   inventory: { title: 'Inventory', description: 'Track produce stored across your locations.' },
   ledger: { title: 'Cash book', description: 'Keep income and expenses in one simple ledger.' },
 }
@@ -89,9 +90,9 @@ function App() {
   const [modal, setModal] = useState<ModalMode | null>(null)
   const [modalError, setModalError] = useState('')
   const [notice, setNotice] = useState(initialState.notice)
+  const [query, setQuery] = useState('')
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const totals = ledgerTotals(data.ledger)
-  const salesValue = totalSales(data.sales)
   const stockValue = totalStock(data.inventory)
   const heading = sectionTitles[section]
 
@@ -131,26 +132,15 @@ function App() {
     const id = crypto.randomUUID()
     try {
       if (modal === 'sale') {
-        const farmer = readText(form, 'farmer')
-        const crop = readText(form, 'crop')
-        const quantityKg = readAmount(form, 'quantityKg')
-        const pricePerKg = readAmount(form, 'pricePerKg')
-        const soldAt = readText(form, 'date')
-        if (!farmer || !crop || !soldAt || quantityKg <= 0 || pricePerKg <= 0) {
-          throw new Error('Enter the farmer, crop, date, and positive quantity and price.')
-        }
-        const amount = quantityKg * pricePerKg
-        if (!commit({
-          ...data,
-          sales: [{ id, farmer, crop, quantityKg, pricePerKg, soldAt }, ...data.sales],
-          ledger: [{
-            id: crypto.randomUUID(),
-            type: 'income',
-            description: `Crop sale · ${crop} · ${farmer}`,
-            amount,
-            recordedAt: soldAt,
-          }, ...data.ledger],
-        }, 'Sale recorded and added to the cash book.')) return
+        const nextData = recordFarmerIntake(data, {
+          farmer: readText(form, 'farmer'),
+          crop: readText(form, 'crop'),
+          quantityKg: readAmount(form, 'quantityKg'),
+          pricePerKg: readAmount(form, 'pricePerKg'),
+          soldAt: readText(form, 'date'),
+          location: readText(form, 'location'),
+        })
+        if (!commit(nextData, 'Farmer intake recorded, stock updated, and payout added to the cash book.')) return
       } else if (modal === 'stock') {
         const inventory = updateStock(
           data.inventory,
@@ -189,16 +179,16 @@ function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <a className="brand" href="#" onClick={(event) => { event.preventDefault(); setSection('overview') }}>
-          <span className="brand-mark"><Sprout size={23} strokeWidth={2.2} /></span>
-          <span className="brand-copy"><strong>Mavuno</strong><small>COOPERATIVE</small></span>
+          <img className="brand-mark" src="/mavuno.svg" alt="" />
+          <span className="brand-copy"><strong>Mavuno <span>Co-op</span></strong><small>NAKURU COUNTY</small></span>
         </a>
-        <div className="sidebar-label">WORKSPACE</div>
+        <div className="sidebar-label">YOUR WORKSPACE</div>
         <nav className="main-nav" aria-label="Main navigation">
           {navigation.map(({ id, label, icon: Icon }) => (
             <button
               className={`nav-item ${section === id ? 'active' : ''}`}
               key={id}
-              onClick={() => { setSection(id); setNotice('') }}
+              onClick={() => { setSection(id); setNotice(''); setQuery('') }}
               aria-current={section === id ? 'page' : undefined}
             >
               <Icon size={19} strokeWidth={1.9} />
@@ -208,31 +198,34 @@ function App() {
         </nav>
         <div className="sidebar-bottom">
           <div className="cooperative-card">
-            <span className="cooperative-icon"><Leaf size={17} /></span>
+            <span className="cooperative-icon"><MapPin size={17} /></span>
             <div><strong>Nakuru</strong><small>Farming cooperative</small></div>
           </div>
-          <p className="sidebar-footnote">Your records are saved on this device.</p>
+          <p className="sidebar-footnote">Private to this device · ready offline</p>
         </div>
       </aside>
 
       <div className="workspace">
         <header className="topbar">
-          <div className="mobile-brand"><span className="brand-mark"><Sprout size={21} /></span><strong>Mavuno</strong></div>
-          <div className={`connection ${isOnline ? 'connected' : 'offline'}`}>
-            {isOnline ? <Wifi size={15} /> : <WifiOff size={15} />}
-            <span>{isOnline ? 'Online' : 'Offline'}</span>
+          <div className="mobile-brand"><img className="brand-mark" src="/mavuno.svg" alt="" /><strong>Mavuno Co-op</strong></div>
+          <div className="topbar-status">
+            <span className="local-records"><span className="status-dot" /> On-device records</span>
+            <span className={`connection ${isOnline ? 'connected' : 'offline'}`}>
+              {isOnline ? <Wifi size={14} /> : <WifiOff size={14} />}
+              <span>{isOnline ? 'Online' : 'Offline'}</span>
+            </span>
           </div>
         </header>
 
         <main className="main-content">
           <div className="page-heading">
             <div>
-              <p className="eyebrow">NAKURU · COOPERATIVE RECORDS</p>
+              <p className="eyebrow"><MapPin size={12} /> NAKURU · COOPERATIVE RECORDS</p>
               <h1>{heading.title}</h1>
               <p className="page-description">{heading.description}</p>
             </div>
             <div className="heading-actions">
-              {section === 'sales' && <button className="primary-button" disabled={!canWrite} onClick={() => openModal('sale')}><Plus size={17} /> Record sale</button>}
+              {section === 'sales' && <button className="primary-button" disabled={!canWrite} onClick={() => openModal('sale')}><Plus size={17} /> Record intake</button>}
               {section === 'inventory' && <button className="primary-button" disabled={!canWrite} onClick={() => openModal('stock')}><Plus size={17} /> Adjust stock</button>}
               {section === 'ledger' && <button className="primary-button" disabled={!canWrite} onClick={() => openModal('ledger')}><Plus size={17} /> Add entry</button>}
             </div>
@@ -243,7 +236,6 @@ function App() {
           {section === 'overview' && (
             <Overview
               data={data}
-              salesValue={salesValue}
               stockValue={stockValue}
               income={totals.income}
               expenses={totals.expense}
@@ -252,9 +244,9 @@ function App() {
               setSection={setSection}
             />
           )}
-          {section === 'sales' && <SalesPage sales={data.sales} />}
-          {section === 'inventory' && <InventoryPage inventory={data.inventory} />}
-          {section === 'ledger' && <LedgerPage ledger={data.ledger} totals={totals} />}
+          {section === 'sales' && <SalesPage sales={data.sales} query={query} setQuery={setQuery} />}
+          {section === 'inventory' && <InventoryPage inventory={data.inventory} query={query} setQuery={setQuery} />}
+          {section === 'ledger' && <LedgerPage ledger={data.ledger} totals={totals} query={query} setQuery={setQuery} />}
           <footer className="page-footer"><span>Mavuno Cooperative Records</span><span>Amounts in Kenyan shillings · KES</span></footer>
         </main>
       </div>
@@ -266,7 +258,6 @@ function App() {
 
 function Overview({
   data,
-  salesValue,
   stockValue,
   income,
   expenses,
@@ -275,7 +266,6 @@ function Overview({
   setSection,
 }: {
   data: CooperativeData
-  salesValue: number
   stockValue: number
   income: number
   expenses: number
@@ -283,49 +273,76 @@ function Overview({
   openModal: (mode: ModalMode) => void
   setSection: (section: Section) => void
 }) {
+  const intakeValueToday = data.sales
+    .filter((sale) => sale.soldAt === localDate())
+    .reduce((sum, sale) => sum + sale.quantityKg * sale.pricePerKg, 0)
+  const locations = Array.from(new Set(data.inventory.map((item) => item.location.trim()).filter(Boolean)))
+  const locationTotals = locations
+    .map((location) => ({
+      location,
+      quantityKg: data.inventory
+        .filter((item) => item.location.toLowerCase() === location.toLowerCase())
+        .reduce((sum, item) => sum + item.quantityKg, 0),
+    }))
+    .sort((a, b) => b.quantityKg - a.quantityKg)
+
   return (
     <>
       <section className="welcome-card">
         <div className="welcome-copy">
-          <div className="welcome-tag"><span /> COOPERATIVE DASHBOARD</div>
-          <h2>Good work starts with<br />good records.</h2>
-          <p>Keep your sales, harvest stock, and cash book together — ready whenever you need them.</p>
-          <button className="welcome-button" disabled={!canWrite} onClick={() => openModal('sale')}><Plus size={17} /> Record a crop sale</button>
+          <div className="welcome-tag"><span /> YOUR CO-OP, AT A GLANCE</div>
+          <h2>A better harvest<br />starts together.</h2>
+          <p>Keep farmer deliveries, crop stores, and cooperative finances in one simple place.</p>
+          <button className="welcome-button" disabled={!canWrite} onClick={() => openModal('sale')}><Plus size={17} /> Record farmer intake</button>
         </div>
-        <div className="welcome-art" aria-hidden="true">
-          <div className="sun-disc" />
-          <div className="hill hill-back" />
-          <div className="hill hill-front" />
-          <div className="field-lines"><i /><i /><i /><i /><i /></div>
-          <div className="art-stalk stalk-one"><b /><b /><b /></div>
-          <div className="art-stalk stalk-two"><b /><b /><b /></div>
-          <div className="art-stalk stalk-three"><b /><b /><b /></div>
-        </div>
+        <img className="welcome-art" src="/images/nakuru-harvest.svg" alt="" />
       </section>
 
       <section className="metric-grid" aria-label="Cooperative totals">
-        <Metric icon={CircleDollarSign} label="Recorded sales" value={formatCurrency(salesValue)} detail={`${data.sales.length} sale${data.sales.length === 1 ? '' : 's'} recorded`} tone="green" />
-        <Metric icon={Boxes} label="Stock on hand" value={`${formatQuantity(stockValue)} kg`} detail={`${data.inventory.length} crop and storage record${data.inventory.length === 1 ? '' : 's'}`} tone="lime" />
-        <Metric icon={ArrowDownLeft} label="Cash in" value={formatCurrency(income)} detail="Sales and other income" tone="blue" />
-        <Metric icon={ArrowUpRight} label="Cash out" value={formatCurrency(expenses)} detail="Recorded expenses" tone="orange" />
+        <Metric icon={CircleDollarSign} label="Farmer intake today" value={formatCurrency(intakeValueToday)} detail="Recorded farmer payouts today" tone="green" />
+        <Metric icon={Boxes} label="Stock on hand" value={`${formatQuantity(stockValue)} kg`} detail={`${data.inventory.length} crop and store records`} tone="lime" />
+        <Metric icon={ArrowDownLeft} label="Cash book balance" value={formatCurrency(income - expenses)} detail="Income less recorded expenses" tone="blue" />
+        <Metric icon={MapPin} label="Storage locations" value={String(locations.length)} detail="Locations with recorded stock" tone="orange" />
+      </section>
+
+      <section className="quick-actions panel">
+        <div className="panel-heading">
+          <div><h2>Quick actions</h2><p>Common tasks, ready when you are</p></div>
+        </div>
+        <div className="quick-action-grid">
+          <button className="quick-action" disabled={!canWrite} onClick={() => openModal('sale')}><span className="quick-action-icon sale-shortcut"><ClipboardList size={18} /></span><span><strong>Receive farmer produce</strong><small>Record intake and farmer payment</small></span><Plus size={17} /></button>
+          <button className="quick-action" disabled={!canWrite} onClick={() => openModal('stock')}><span className="quick-action-icon stock-shortcut"><Boxes size={18} /></span><span><strong>Update crop stock</strong><small>Receive or dispatch produce</small></span><Plus size={17} /></button>
+          <button className="quick-action" disabled={!canWrite} onClick={() => openModal('ledger')}><span className="quick-action-icon ledger-shortcut"><ReceiptText size={18} /></span><span><strong>Add cash entry</strong><small>Record income or expenses</small></span><Plus size={17} /></button>
+        </div>
       </section>
 
       <div className="overview-lower">
         <section className="panel recent-panel">
           <div className="panel-heading">
-            <div><h2>Recent sales</h2><p>Your latest recorded crop deliveries</p></div>
-            <button className="text-button" onClick={() => setSection('sales')}>All sales <ArrowUpRight size={15} /></button>
+            <div><h2>Recent farmer intake</h2><p>Your latest recorded member deliveries</p></div>
+            <button className="text-button" onClick={() => setSection('sales')}>View intake <ArrowUpRight size={15} /></button>
           </div>
           {data.sales.length === 0
-            ? <EmptyState icon={ClipboardList} title="No sales recorded yet" description="Record a crop sale to start building your cooperative's history." />
+            ? <EmptyState icon={ClipboardList} title="No farmer deliveries yet" description="Record a member delivery to start building your cooperative's intake history." />
             : <SalesTable sales={data.sales.slice(0, 5)} />}
         </section>
-        <section className="panel shortcuts-panel">
-          <div className="panel-heading"><div><h2>Quick actions</h2><p>Keep your records up to date</p></div></div>
-          <button className="shortcut-row" disabled={!canWrite} onClick={() => openModal('sale')}><span className="shortcut-icon sale-shortcut"><ClipboardList size={18} /></span><span><strong>Record a sale</strong><small>Log a farmer delivery</small></span><Plus size={17} /></button>
-          <button className="shortcut-row" disabled={!canWrite} onClick={() => openModal('stock')}><span className="shortcut-icon stock-shortcut"><Boxes size={18} /></span><span><strong>Adjust stock</strong><small>Receive or dispatch produce</small></span><Plus size={17} /></button>
-          <button className="shortcut-row" disabled={!canWrite} onClick={() => openModal('ledger')}><span className="shortcut-icon ledger-shortcut"><ReceiptText size={18} /></span><span><strong>Add cash entry</strong><small>Record other income or expense</small></span><Plus size={17} /></button>
-          <div className="balance-strip"><span>Cash book balance</span><strong className={income - expenses < 0 ? 'negative' : ''}>{formatCurrency(income - expenses)}</strong></div>
+        <section className="panel locations-panel">
+          <div className="panel-heading">
+            <div><h2>Stock by location</h2><p>Recorded quantities across your stores</p></div>
+            <button className="text-button" onClick={() => setSection('inventory')}>Inventory <ArrowUpRight size={15} /></button>
+          </div>
+          {locationTotals.length === 0
+            ? <EmptyState icon={MapPin} title="No stored produce yet" description="Add a stock record to see quantities by location." />
+            : <div className="location-list">
+              {locationTotals.slice(0, 4).map(({ location, quantityKg }, index) => (
+                <div className="location-row" key={location}>
+                  <span className={`location-mark location-mark-${index % 3}`}><MapPin size={15} /></span>
+                  <span className="location-name">{location}</span>
+                  <strong>{formatQuantity(quantityKg)} <small>kg</small></strong>
+                </div>
+              ))}
+              <div className="location-total"><span>Total stock</span><strong>{formatQuantity(stockValue)} kg</strong></div>
+            </div>}
         </section>
       </div>
     </>
@@ -349,17 +366,23 @@ function Metric({ icon: Icon, label, value, detail, tone }: {
   )
 }
 
-function SalesPage({ sales }: { sales: CooperativeData['sales'] }) {
-  const value = totalSales(sales)
+function SalesPage({ sales, query, setQuery }: { sales: CooperativeData['sales']; query: string; setQuery: (query: string) => void }) {
+  const filteredSales = sales.filter((sale) => `${sale.farmer} ${sale.crop} ${sale.location ?? ''} ${sale.soldAt}`.toLowerCase().includes(query.toLowerCase()))
+  const value = totalSales(filteredSales)
   return (
     <section className="panel data-panel">
       <div className="panel-heading">
-        <div><h2>Sales register</h2><p>{sales.length} recorded transaction{sales.length === 1 ? '' : 's'}</p></div>
-        <div className="table-total"><small>Recorded value</small><strong>{formatCurrency(value)}</strong></div>
+        <div><h2>Farmer intake register</h2><p>{filteredSales.length} of {sales.length} recorded {sales.length === 1 ? 'delivery' : 'deliveries'}</p></div>
+        <div className="table-total"><small>Farmer payouts</small><strong>{formatCurrency(value)}</strong></div>
       </div>
       {sales.length === 0
-        ? <EmptyState icon={ClipboardList} title="Your sales register is empty" description="Use “Record sale” to add a farmer delivery. Sale income is added to the cash book automatically." />
-        : <SalesTable sales={sales} />}
+        ? <EmptyState icon={ClipboardList} title="No farmer deliveries recorded" description="Use “Record intake” to log produce received and the farmer payout. The produce is added to stock." />
+        : <>
+          <SearchField value={query} onChange={setQuery} placeholder="Search member or crop" />
+          {filteredSales.length > 0
+            ? <SalesTable sales={filteredSales} />
+            : <EmptyState icon={Search} title="No matching deliveries" description="Try another farmer, crop, or receiving store." />}
+        </>}
     </section>
   )
 }
@@ -368,12 +391,13 @@ function SalesTable({ sales }: { sales: CooperativeData['sales'] }) {
   return (
     <div className="table-wrap">
       <table>
-        <thead><tr><th>Farmer</th><th>Crop</th><th>Quantity</th><th>Price / kg</th><th>Date</th><th className="align-right">Sale value</th></tr></thead>
+        <thead><tr><th>Farmer</th><th>Crop</th><th>Receiving store</th><th>Quantity received</th><th>Price / kg</th><th>Date received</th><th className="align-right">Farmer payout</th></tr></thead>
         <tbody>
           {sales.map((sale) => (
             <tr key={sale.id}>
               <td><span className="farmer-cell"><span className="avatar">{sale.farmer.trim().slice(0, 1).toUpperCase()}</span><strong>{sale.farmer}</strong></span></td>
-              <td><span className="crop-pill">{sale.crop}</span></td>
+              <td><span className="crop-name"><CropImage crop={sale.crop} /><span className="crop-pill">{sale.crop}</span></span></td>
+              <td>{sale.location || '—'}</td>
               <td>{formatQuantity(sale.quantityKg)} kg</td>
               <td>{formatCurrency(sale.pricePerKg)}</td>
               <td>{displayDate(sale.soldAt)}</td>
@@ -386,34 +410,41 @@ function SalesTable({ sales }: { sales: CooperativeData['sales'] }) {
   )
 }
 
-function InventoryPage({ inventory }: { inventory: CooperativeData['inventory'] }) {
-  const stock = totalStock(inventory)
+function InventoryPage({ inventory, query, setQuery }: { inventory: CooperativeData['inventory']; query: string; setQuery: (query: string) => void }) {
+  const filteredInventory = inventory.filter((item) => `${item.crop} ${item.location}`.toLowerCase().includes(query.toLowerCase()))
+  const stock = totalStock(filteredInventory)
   return (
     <section className="panel data-panel">
       <div className="panel-heading">
-        <div><h2>Stock register</h2><p>By crop and storage location</p></div>
+        <div><h2>Stock register</h2><p>{filteredInventory.length} of {inventory.length} crop and storage records</p></div>
         <div className="table-total"><small>Total stock</small><strong>{formatQuantity(stock)} kg</strong></div>
       </div>
       {inventory.length === 0
         ? <EmptyState icon={Boxes} title="No stock on record" description="Adjust stock when produce is received or dispatched from a store." />
-        : <div className="table-wrap">
+        : <>
+          <SearchField value={query} onChange={setQuery} placeholder="Search crop or location" />
+          {filteredInventory.length === 0
+            ? <EmptyState icon={Search} title="No matching stock" description="Try another crop or storage location." />
+            : <div className="table-wrap">
           <table>
             <thead><tr><th>Crop</th><th>Storage location</th><th className="align-right">Quantity on hand</th></tr></thead>
-            <tbody>{inventory.map((item) => (
+            <tbody>{filteredInventory.map((item) => (
               <tr key={item.id}>
-                <td><span className="crop-name"><span className="crop-icon"><Sprout size={16} /></span><strong>{item.crop}</strong></span></td>
+                <td><span className="crop-name"><CropImage crop={item.crop} /><strong>{item.crop}</strong></span></td>
                 <td>{item.location}</td>
                 <td className="align-right amount-cell">{formatQuantity(item.quantityKg)} kg</td>
               </tr>
             ))}</tbody>
           </table>
-        </div>}
-      {inventory.length > 0 && <p className="table-hint">To dispatch produce, enter a negative quantity in “Adjust stock”. Stock cannot go below zero.</p>}
+            </div>}
+          <p className="table-hint">Use a negative quantity to dispatch produce. Stock cannot be reduced below zero.</p>
+        </>}
     </section>
   )
 }
 
-function LedgerPage({ ledger, totals }: { ledger: CooperativeData['ledger']; totals: ReturnType<typeof ledgerTotals> }) {
+function LedgerPage({ ledger, totals, query, setQuery }: { ledger: CooperativeData['ledger']; totals: ReturnType<typeof ledgerTotals>; query: string; setQuery: (query: string) => void }) {
+  const filteredLedger = ledger.filter((entry) => `${entry.description} ${entry.type} ${entry.recordedAt}`.toLowerCase().includes(query.toLowerCase()))
   return (
     <>
       <div className="ledger-summary">
@@ -422,13 +453,16 @@ function LedgerPage({ ledger, totals }: { ledger: CooperativeData['ledger']; tot
         <div><span>Balance</span><strong className={totals.income - totals.expense < 0 ? 'negative' : ''}>{formatCurrency(totals.income - totals.expense)}</strong></div>
       </div>
       <section className="panel data-panel">
-        <div className="panel-heading"><div><h2>Cash book</h2><p>Sales are entered here automatically; use “Add entry” for other cash movements.</p></div></div>
+        <div className="panel-heading"><div><h2>Cash book</h2><p>{filteredLedger.length} of {ledger.length} entries · farmer payouts are recorded automatically</p></div></div>
+        {ledger.length > 0 && <SearchField value={query} onChange={setQuery} placeholder="Search description or type" />}
         {ledger.length === 0
-          ? <EmptyState icon={ReceiptText} title="No cash entries yet" description="Record a sale or add an income or expense to start your cash book." />
-          : <div className="table-wrap">
+          ? <EmptyState icon={ReceiptText} title="No cash entries yet" description="Record a farmer intake or add an income or expense to start your cash book." />
+          : filteredLedger.length === 0
+            ? <EmptyState icon={Search} title="No matching entries" description="Try another description or entry type." />
+            : <div className="table-wrap">
             <table>
               <thead><tr><th>Type</th><th>Description</th><th>Date</th><th className="align-right">Amount</th></tr></thead>
-              <tbody>{ledger.map((entry) => (
+              <tbody>{filteredLedger.map((entry) => (
                 <tr key={entry.id}>
                   <td><span className={`type-pill ${entry.type}`}>{entry.type === 'income' ? <ArrowDownLeft size={14} /> : <ArrowUpRight size={14} />}{entry.type === 'income' ? 'Income' : 'Expense'}</span></td>
                   <td><strong className="description-cell">{entry.description}</strong></td>
@@ -441,6 +475,22 @@ function LedgerPage({ ledger, totals }: { ledger: CooperativeData['ledger']; tot
       </section>
     </>
   )
+}
+
+function SearchField({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) {
+  return (
+    <label className="table-search">
+      <Search size={16} aria-hidden="true" />
+      <input aria-label={placeholder} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
+      {value && <button type="button" className="clear-search" onClick={() => onChange('')} aria-label="Clear search"><X size={15} /></button>}
+    </label>
+  )
+}
+
+function CropImage({ crop }: { crop: string }) {
+  const normalized = crop.toLowerCase()
+  const image = normalized.includes('bean') ? 'beans' : normalized.includes('sorghum') ? 'sorghum' : 'maize'
+  return <img className={`crop-image crop-image-${image}`} src={`/images/${image}.svg`} alt="" loading="lazy" />
 }
 
 function EmptyState({ icon: Icon, title, description }: { icon: LucideIcon; title: string; description: string }) {
@@ -459,7 +509,7 @@ function RecordModal({ mode, error, onClose, onSubmit }: {
   onClose: () => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
 }) {
-  const titles: Record<ModalMode, string> = { sale: 'Record a crop sale', stock: 'Adjust inventory', ledger: 'Add cash book entry' }
+  const titles: Record<ModalMode, string> = { sale: 'Receive farmer produce', stock: 'Adjust inventory', ledger: 'Add cash book entry' }
   return (
     <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -470,13 +520,14 @@ function RecordModal({ mode, error, onClose, onSubmit }: {
             <label>Farmer name<input name="farmer" autoFocus required maxLength={80} placeholder="e.g. Wanjiku Njoroge" /></label>
             <div className="form-grid">
               <label>Crop<input name="crop" required maxLength={60} placeholder="e.g. Maize" /></label>
-              <label>Date sold<input name="date" type="date" required defaultValue={localDate()} /></label>
+              <label>Date received<input name="date" type="date" required defaultValue={localDate()} /></label>
             </div>
             <div className="form-grid">
               <label>Quantity (kg)<input name="quantityKg" type="number" min="0.1" step="0.1" required placeholder="0" /></label>
-              <label>Price per kg (KES)<input name="pricePerKg" type="number" min="0.01" step="0.01" required placeholder="0" /></label>
+              <label>Farmer price per kg (KES)<input name="pricePerKg" type="number" min="0.01" step="0.01" required placeholder="0" /></label>
             </div>
-            <p className="form-note">The sale value will be added to the cash book as income.</p>
+            <label>Receiving store<input name="location" required maxLength={80} placeholder="e.g. Nakuru Main Store" /></label>
+            <p className="form-note">The farmer payout is recorded as a cash-book expense and the produce is added to the selected store.</p>
           </>}
           {mode === 'stock' && <>
             <label>Crop<input name="crop" autoFocus required maxLength={60} placeholder="e.g. Maize" /></label>

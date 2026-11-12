@@ -5,6 +5,7 @@ export type Sale = {
   quantityKg: number
   pricePerKg: number
   soldAt: string
+  location?: string
 }
 
 export type InventoryItem = {
@@ -28,10 +29,42 @@ export type CooperativeData = {
   ledger: LedgerEntry[]
 }
 
+export type FarmerIntake = Omit<Sale, 'id'>
+
 export const emptyData: CooperativeData = {
   sales: [],
   inventory: [],
   ledger: [],
+}
+
+export function recordFarmerIntake(data: CooperativeData, intake: FarmerIntake): CooperativeData {
+  const farmer = intake.farmer.trim()
+  const crop = intake.crop.trim()
+  const location = intake.location?.trim() ?? ''
+  if (!farmer || !crop || !location || !intake.soldAt || intake.quantityKg <= 0 || intake.pricePerKg <= 0) {
+    throw new Error('Enter the farmer, crop, receiving store, date, and positive quantity and price.')
+  }
+  if (!Number.isFinite(intake.quantityKg) || !Number.isFinite(intake.pricePerKg)) {
+    throw new Error('Enter a valid quantity and price.')
+  }
+
+  const amount = intake.quantityKg * intake.pricePerKg
+  const received = { ...intake, id: crypto.randomUUID(), farmer, crop, location }
+  const inventory = updateStock(data.inventory, crop, location, intake.quantityKg)
+  const ledger: LedgerEntry = {
+    id: crypto.randomUUID(),
+    type: 'expense',
+    description: `Farmer intake · ${crop} · ${farmer}`,
+    amount,
+    recordedAt: intake.soldAt,
+  }
+
+  return {
+    ...data,
+    inventory,
+    sales: [received, ...data.sales],
+    ledger: [ledger, ...data.ledger],
+  }
 }
 
 export function updateStock(

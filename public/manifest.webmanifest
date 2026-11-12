@@ -1,11 +1,11 @@
 {
   "name": "Mavuno Cooperative Records",
-  "short_name": "Mavuno",
+  "short_name": "Mavuno Co-op",
   "description": "Offline-ready crop sales, stock, and cash records.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f5f6f1",
-  "theme_color": "#173b2b",
+  "background_color": "#f4f6f2",
+  "theme_color": "#145a37",
   "icons": [
     {
       "src": "/mavuno.svg",

@@ -1,5 +1,13 @@
-const CACHE_NAME = 'mavuno-shell-v1'
-const APP_SHELL = ['/', '/manifest.webmanifest', '/mavuno.svg']
+const CACHE_NAME = 'mavuno-shell-v2'
+const APP_SHELL = [
+  '/',
+  '/manifest.webmanifest',
+  '/mavuno.svg',
+  '/images/nakuru-harvest.svg',
+  '/images/maize.svg',
+  '/images/beans.svg',
+  '/images/sorghum.svg',
+]
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)))
