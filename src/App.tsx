@@ -497,7 +497,14 @@ function SearchField({ value, onChange, placeholder }: { value: string; onChange
 
 function CropImage({ crop }: { crop: string }) {
   const normalized = crop.toLowerCase()
-  const image = normalized.includes('bean') ? 'beans-harvest' : normalized.includes('sorghum') ? 'sorghum-field' : 'maize-farmer'
+  const image = normalized.includes('bean') || normalized.includes('gram')
+    ? 'beans-harvest'
+    : normalized.includes('sorghum')
+      ? 'sorghum-field'
+      : normalized.includes('maize') || normalized.includes('corn')
+        ? 'maize-farmer'
+        : null
+  if (!image) return null
   return <img className={`crop-image crop-image-${image}`} src={`/images/${image}.jpg`} alt="" loading="lazy" />
 }
 
